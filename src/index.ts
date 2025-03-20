@@ -36,6 +36,9 @@ export class AuthLibrary {
   createSession = (userId: string) => this.session instanceof StatefulSession
     ? this.session.createSession(userId)
     : this.session.createToken(userId);
+  verifySession = (sessionIdOrToken: string) => this.session instanceof StatefulSession
+    ? this.session.verifySession(sessionIdOrToken)
+    : this.session.verifyToken(sessionIdOrToken);
 }
 
 export default AuthLibrary;
