@@ -1,0 +1,21 @@
+{
+  "name": "lc-auth",
+  "version": "1.0.1",
+  "description": "auth library using nodejs builtin features with zero dependencies, allows user to select stateless or stateful strategies and support both credentials and oauth",
+  "keywords": [
+    "auth"
+  ],
+  "license": "MIT",
+  "author": "cronox20@gmail.com",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc",
+    "prepublishOnly": "npm run build",
+    "test": "node --test"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.10",
+    "typescript": "^5.8.2"
+  }
+}
