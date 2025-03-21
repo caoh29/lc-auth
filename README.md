@@ -112,9 +112,9 @@ const server = createServer(async (req, res) => {
 server.listen(3000, () => console.log('Server running on port 3000'));
 ```
 
-# Notes:
+### Notes:
 
-The **_verifySession_** method checks the JWT provided in the **_Authorization: Bearer <token>_** header.
+The **verifySession** method checks the JWT provided in the **Authorization: Bearer <token>** header.
 Since this is stateless, you must handle user storage (e.g., in a database) yourself.
 
 # 2. Local Authentication with Stateful Sessions
@@ -226,10 +226,10 @@ const server = createServer(async (req, res) => {
 server.listen(3000, () => console.log('Server running on port 3000'));
 ```
 
-# Notes:
+### Notes:
 
-The **_verifySession_** method checks the session ID provided in a cookie named **_sessionId_**.
-You must implement the **_Database_** interface for session and user storage.
+The **verifySession** method checks the session ID provided in a cookie named **sessionId**.
+You must implement the **Database** interface for session and user storage.
 
 # 3. OAuth Integration (e.g., Google)
 
@@ -330,14 +330,14 @@ async function fetchUserInfo(accessToken) {
 }
 ```
 
-# Notes:
+### Notes:
 
 - Register with Google Cloud Console to get clientId and clientSecret.
 - Implement fetchUserInfo to map OAuth user data to your system.
 
 ## Configuration Options
 
-The **_AuthLibrary_** constructor accepts an **_AuthConfig_** object:
+The **AuthLibrary** constructor accepts an **AuthConfig** object:
 
 ```
 interface AuthConfig {
@@ -348,7 +348,7 @@ interface AuthConfig {
 }
 ```
 
-# Database Interface (for Stateful Strategy)
+## Database Interface (for Stateful Strategy)
 
 You must implement the following interface for stateful sessions:
 
@@ -361,7 +361,7 @@ interface Database {
 }
 ```
 
-# OAuth Provider Configuration
+## OAuth Provider Configuration
 
 For OAuth, provide the following configuration:
 
@@ -379,16 +379,16 @@ interface OAuthProviderConfig {
 ## Security Considerations
 
 - HTTPS: Always use HTTPS in production to secure tokens and cookies.
-- Secrets: Store **_jwtSecret_** in environment variables, not in code.
-- Cookies: For stateful sessions, set **_HttpOnly_** and **_Secure_** flags on cookies.
+- Secrets: Store **jwtSecret** in environment variables, not in code.
+- Cookies: For stateful sessions, set **HttpOnly** and **Secure** flags on cookies.
 - OAuth: Validate redirect URIs and use secure state parameters to prevent CSRF.
-- Password Hashing: The library uses **_crypto.scryptSync_** for secure password hashing.
+- Password Hashing: The library uses **crypto.scryptSync** for secure password hashing.
 
 ## Limitations
 
-- _Zero Dependencies_: You must handle HTTP requests (e.g., for OAuth user info) and database operations yourself.
-- _Refresh Tokens_: Not implemented; you can extend the library to add refresh token support using the JWT utilities.
-- _Framework Integration_: The library is framework-agnostic; you must implement middleware or route handlers for your framework.
+- **Zero Dependencies**: You must handle HTTP requests (e.g., for OAuth user info) and database operations yourself.
+- **Refresh Tokens**: Not implemented; you can extend the library to add refresh token support using the JWT utilities.
+- **Framework Integration**: The library is framework-agnostic; you must implement middleware or route handlers for your framework.
 
 ## Contributing
 
@@ -396,7 +396,7 @@ Contributions are welcome! Please submit a pull request or open an issue on the 
 
 ## License
 
-MIT License. See _LICENSE_ for details.
+MIT License. See **LICENSE** for details.
 
 ## Author
 
