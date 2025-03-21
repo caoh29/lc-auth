@@ -1,4 +1,4 @@
-### lc-auth
+# lc-auth
 
 A lightweight, zero-dependency authentication library for Node.js, supporting local credentials, OAuth, and both stateful (database-backed) and stateless (JWT-based) session strategies. Built with TypeScript for type safety and modern Node.js applications.
 
