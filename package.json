@@ -1,6 +1,6 @@
 {
   "name": "lc-auth",
-  "version": "1.0.3",
+  "version": "1.1.0",
   "description": "auth library using nodejs builtin features with zero dependencies, allows user to select stateless or stateful strategies and support both credentials and oauth",
   "keywords": [
     "auth"

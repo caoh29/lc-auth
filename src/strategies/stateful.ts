@@ -4,16 +4,16 @@ import { Database } from '../core/types';
 export class StatefulSession {
   constructor(private readonly db: Database) { }
 
-  async createSession(userId: string): Promise<string> {
+  async createSession(userUniqueIdentifier: string): Promise<string> {
     const sessionId = randomBytes(16).toString('hex');
-    await this.db.saveSession(sessionId, { userId, expires: Date.now() + 3600000 }); // 1 hour
+    await this.db.saveSession(sessionId, { sub: userUniqueIdentifier, exp: Math.floor(Date.now() / 1000) + 1800 }); // 30 minutes
     return sessionId;
   }
 
   async verifySession(sessionId: string): Promise<string | null> {
     const session = await this.db.getSession(sessionId);
-    if (session && session.expires > Date.now()) {
-      return session.userId;
+    if (session && session.exp > Date.now()) {
+      return session.sub;
     }
     return null;
   }

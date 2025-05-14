@@ -20,13 +20,13 @@ const mockDb: Database = {
     return Promise.resolve();
   },
   async getSession(sessionId) {
-    return sessionId === 'validSession' ? { userId: '1', expires: Date.now() + 3600000 } : null;
+    return sessionId === 'validSession' ? { sub: '1', expires: Date.now() + 3600000 } : null;
   },
-  async deleteSession(userId) {
+  async deleteSession(sessionId) {
     return Promise.resolve();
   },
-  async findUserById(userId) {
-    return userId === '1' ? { id: '1', username: 'XXXXXXXX', passwordHash: hashPassword('testpass') } : null;
+  async findUserById(sessionId) {
+    return sessionId === '1' ? { id: '1', username: 'XXXXXXXX', passwordHash: hashPassword('testpass') } : null;
   }
 };
 
@@ -90,13 +90,13 @@ describe('Authentication Strategies', () => {
     });
 
     it('should verify a valid session', async () => {
-      const userId = await stateful.verifySession('validSession');
-      strictEqual(userId, '1', 'Valid session should return user ID');
+      const sub = await stateful.verifySession('validSession');
+      strictEqual(sub, '1', 'Valid session should return user ID');
     });
 
     it('should return null for invalid session', async () => {
-      const userId = await stateful.verifySession('invalidSession');
-      strictEqual(userId, null, 'Invalid session should return null');
+      const sub = await stateful.verifySession('invalidSession');
+      strictEqual(sub, null, 'Invalid session should return null');
     });
   });
 
@@ -107,24 +107,24 @@ describe('Authentication Strategies', () => {
     it('should create a valid token', () => {
       const token = stateless.createToken('1');
       const decoded = verifyJWT(token, 'mysecret');
-      strictEqual(decoded?.userId, '1', 'Token should contain user ID');
+      strictEqual(decoded?.sub, '1', 'Token should contain user ID');
     });
 
     it('should verify a valid token', () => {
       const token = stateless.createToken('1');
-      const userId = stateless.verifyToken(token);
-      strictEqual(userId, '1', 'Valid token should verify');
+      const sub = stateless.verifyToken(token);
+      strictEqual(sub, '1', 'Valid token should verify');
     });
 
     it('should return null for invalid token', () => {
-      const userId = stateless.verifyToken('invalid.token.here');
-      strictEqual(userId, null, 'Invalid token should return null');
+      const sub = stateless.verifyToken('invalid.token.here');
+      strictEqual(sub, null, 'Invalid token should return null');
     });
 
     it('should return null for expired token', () => {
-      const token = signJWT({ userId: '1', expires: Math.floor(Date.now() / 1000) - 3600 }, 'mysecret');
-      const userId = stateless.verifyToken(token);
-      strictEqual(userId, null, 'Expired token should return null');
+      const token = signJWT({ sub: '1', expires: Math.floor(Date.now() / 1000) - 3600 }, 'mysecret');
+      const sub = stateless.verifyToken(token);
+      strictEqual(sub, null, 'Expired token should return null');
     });
   });
 });

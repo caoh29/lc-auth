@@ -24,10 +24,19 @@ export function signJWT(payload: Session, secret: string): string {
 export function verifyJWT(token: string, secret: string): Session | null {
   const [encodedHeader, encodedPayload, signature] = token.split('.');
   const expectedSignature = createHmac('sha256', secret).update(`${encodedHeader}.${encodedPayload}`).digest('base64url');
+  // Prevent unsigned tokens from being accepted
   if (signature !== expectedSignature) return null;
   try {
     return JSON.parse(Buffer.from(encodedPayload, 'base64url').toString());
   } catch {
     return null;
   }
+}
+
+export function generateCodeVerifier(): string {
+  return randomBytes(64).toString('base64url');
+}
+
+export function generateCodeChallenge(codeVerifier: string): string {
+  return createHmac('sha256', codeVerifier).digest('base64url');
 }
