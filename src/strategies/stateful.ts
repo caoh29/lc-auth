@@ -1,24 +1,37 @@
-import { randomBytes } from 'crypto';
-import { Database } from '../core/types';
+import { Database, Session } from '../core/types';
 
 export class StatefulSession {
   constructor(private readonly db: Database) { }
 
-  async createSession(userId: string): Promise<string> {
-    const sessionId = randomBytes(16).toString('hex');
-    await this.db.saveSession(sessionId, { userId, expires: Date.now() + 3600000 }); // 1 hour
-    return sessionId;
+  async createSession(userUniqueIdentifier: string, expiresAt?: number): Promise<string> {
+    if (!this.db.createSession) {
+      throw new Error('createSession is not implemented');
+    }
+    return await this.db.createSession(userUniqueIdentifier, expiresAt ?? Math.floor(Date.now() / 1000) + 1800); // 30 minutes
   }
 
-  async verifySession(sessionId: string): Promise<string | null> {
-    const session = await this.db.getSession(sessionId);
-    if (session && session.expires > Date.now()) {
+  async getSession(sessionIdOrToken: string): Promise<Session | null> {
+    if (!this.db.getSession) {
+      throw new Error('getSession is not implemented');
+    }
+    return await this.db.getSession(sessionIdOrToken);
+  }
+
+  async verifySession(sessionIdOrToken: string): Promise<string | null> {
+    if (!this.db.getSession) {
+      throw new Error('getSession is not implemented');
+    }
+    const session = await this.db.getSession(sessionIdOrToken);
+    if (session && session.expiresAt > Date.now()) {
       return session.userId;
     }
     return null;
   }
 
-  async deleteSession(sessionId: string): Promise<void> {
-    await this.db.deleteSession(sessionId);
+  async deleteSession(sessionIdOrToken: string): Promise<void> {
+    if (!this.db.deleteSession) {
+      throw new Error('deleteSession is not implemented');
+    }
+    await this.db.deleteSession(sessionIdOrToken);
   }
 }

@@ -1,18 +1,18 @@
-import { LocalAuth } from './strategies/local';
-import { OAuth } from './strategies/oauth';
 import { StatefulSession } from './strategies/stateful';
 import { StatelessSession } from './strategies/stateless';
-import { Database, OAuthProviderConfig } from './core/types';
+import { LocalAuth } from './strategies/local';
+import { OAuth } from './strategies/oauth';
+import { Database, User, Session, OAuthProviderConfig, OAuthTokenResponse } from './core/types';
 
 export interface AuthConfig {
   strategy: 'stateful' | 'stateless';
-  database: Database;
+  database?: Database;
   jwtSecret?: string;
   oauth?: OAuthProviderConfig;
 }
 
-export class AuthLibrary {
-  private readonly local: LocalAuth;
+export class Auth {
+  private readonly local?: LocalAuth;
   private readonly oauth?: OAuth;
   private readonly session: StatefulSession | StatelessSession;
 
@@ -21,12 +21,13 @@ export class AuthLibrary {
     if (config.strategy === 'stateless' && !config.jwtSecret) {
       throw new Error('jwtSecret is required for stateless strategy');
     }
-
-    if (!config.database) {
-      throw new Error('database is required');
+    if (config.strategy === 'stateful' && !config.database) {
+      throw new Error('database is required for stateful strategy');
     }
 
-    if (config.strategy === 'stateful') {
+    if (config.database) this.local = new LocalAuth(config.database);
+
+    if (config.strategy === 'stateful' && config.database) {
       this.session = new StatefulSession(config.database);
     } else if (config.strategy === 'stateless' && config.jwtSecret) {
       this.session = new StatelessSession(config.jwtSecret);
@@ -34,36 +35,75 @@ export class AuthLibrary {
       throw new Error('Invalid config');
     }
 
-    this.local = new LocalAuth(config.database);
-
     // Initialize OAuth if provided
     if (config.oauth) this.oauth = new OAuth(config.oauth);
   }
 
-  // Bind methods
-  register = () => this.local.register.bind(this.local);
+  async register(username: string, password: string): Promise<User> {
+    if (!this.local) throw new Error('Local auth is not configured');
+    return this.local.register(username, password);
+  }
 
-  login = () => this.local.login.bind(this.local);
+  async login(username: string, password: string): Promise<User | null> {
+    if (!this.local) throw new Error('Local auth is not configured');
+    return this.local.login(username, password);
+  }
 
-  getOAuthUrl = () => this.oauth?.getAuthUrl.bind(this.oauth);
+  getOAuthUrl(state: string, codeChallenge?: string): string {
+    if (!this.oauth) throw new Error('OAuth is not configured');
+    return this.oauth.getAuthUrl(state, codeChallenge);
+  }
 
-  exchangeOAuthCode = () => this.oauth?.exchangeCode.bind(this.oauth);
+  async exchangeOAuthCode(code: string, codeVerifier?: string): Promise<OAuthTokenResponse> {
+    if (!this.oauth) throw new Error('OAuth is not configured');
+    return await this.oauth.exchangeCode(code, codeVerifier);
+  }
 
-  createSession = (userId: string) => this.session instanceof StatefulSession
-    ? this.session.createSession(userId)
-    : this.session.createToken(userId);
+  async refreshOAuthToken(refreshToken: string): Promise<OAuthTokenResponse> {
+    if (!this.oauth) throw new Error('OAuth is not configured');
+    return await this.oauth.refreshAccessToken(refreshToken);
+  }
 
-  verifySession = (sessionIdOrToken: string) => this.session instanceof StatefulSession
-    ? this.session.verifySession(sessionIdOrToken)
-    : this.session.verifyToken(sessionIdOrToken);
+  // It will return either a session id or a token
+  async createSession(userId: string, expiresAt?: number): Promise<string> {
+    if (this.session instanceof StatefulSession) {
+      return this.session.createSession(userId, expiresAt);
+    } else if (this.session instanceof StatelessSession) {
+      return this.session.createToken(userId, expiresAt);
+    } else {
+      throw new Error('Invalid session type');
+    }
+  }
 
-  deleteSession = (sessionIdOrToken: string) => {
+  // It will return a userId if session or token is still valid, otherwise null
+  async verifySession(sessionIdOrToken: string): Promise<string | null> {
+    if (this.session instanceof StatefulSession) {
+      return this.session.verifySession(sessionIdOrToken);
+    } else if (this.session instanceof StatelessSession) {
+      return this.session.verifyToken(sessionIdOrToken);
+    } else {
+      throw new Error('Invalid session type');
+    }
+  }
+
+  // It will return the session only if the session is stateful
+  async getSession(sessionIdOrToken: string): Promise<Session | null> {
+    if (this.session instanceof StatefulSession) {
+      return this.session.getSession(sessionIdOrToken);
+    } else {
+      throw new Error('Not supported');
+    }
+  }
+
+  // It will delete the session only if the session is stateful
+  async deleteSession(sessionIdOrToken: string): Promise<void> {
     if (this.session instanceof StatefulSession) {
       return this.session.deleteSession(sessionIdOrToken);
     } else {
       throw new Error('Not supported');
     }
   };
+
 }
 
-export default AuthLibrary;
+export default Auth;

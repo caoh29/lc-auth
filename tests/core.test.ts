@@ -34,15 +34,15 @@ describe('Core Crypto Utilities', () => {
 
   // JWT Tests
   it('should sign and verify a JWT correctly', () => {
-    const payload = { userId: '123', expires: Date.now() + 3600 };
+    const payload = { sub: '123', expires: Date.now() + 3600 };
     const secret = 'mysecret';
     const token = signJWT(payload, secret);
     const decoded = verifyJWT(token, secret);
-    strictEqual(decoded?.userId, '123', 'JWT should decode to original payload');
+    strictEqual(decoded?.sub, '123', 'JWT should decode to original payload');
   });
 
   it('should return null for tampered JWT', () => {
-    const payload = { userId: '123', expires: Date.now() + 3600 };
+    const payload = { sub: '123', expires: Date.now() + 3600 };
     const secret = 'mysecret';
     const token = signJWT(payload, secret);
     const tampered = token.split('.').slice(0, 2).join('.') + '.tampered'; // Alter signature
@@ -51,7 +51,7 @@ describe('Core Crypto Utilities', () => {
   });
 
   it('should return null for incorrect secret', () => {
-    const payload = { userId: '123', expires: Date.now() + 3600 };
+    const payload = { sub: '123', expires: Date.now() + 3600 };
     const token = signJWT(payload, 'mysecret');
     const decoded = verifyJWT(token, 'wrongsecret');
     strictEqual(decoded, null, 'JWT with wrong secret should not verify');
@@ -63,13 +63,13 @@ describe('Core Crypto Utilities', () => {
   });
 
   it('should include header and payload in JWT', () => {
-    const payload = { userId: '123', expires: Date.now() + 3600 };
+    const payload = { sub: '123', expires: Date.now() + 3600 };
     const secret = 'mysecret';
     const token = signJWT(payload, secret);
     const [headerB64, payloadB64] = token.split('.');
     const header = JSON.parse(Buffer.from(headerB64, 'base64url').toString());
     const decodedPayload = JSON.parse(Buffer.from(payloadB64, 'base64url').toString());
     strictEqual(header.alg, 'HS256', 'Header should specify HS256 algorithm');
-    strictEqual(decodedPayload.userId, '123', 'Payload should match input');
+    strictEqual(decodedPayload.sub, '123', 'Payload should match input');
   });
 });
