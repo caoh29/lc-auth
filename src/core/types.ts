@@ -4,14 +4,25 @@ export interface User {
 }
 
 export interface Session {
+  id: string; // Session ID
+  userId: string; // User unique identifier (username or user ID)
+  expiresAt: number; // Expiration time
+}
+
+export interface TokenPayload {
   sub: string; // User unique identifier (username or user ID)
   exp: number; // Expiration time
+  jti: string; // Token ID
+  iss?: string; // Issuer
+  aud?: string; // Audience
+  iat?: number; // Issued at time
+  nbf?: number; // Not before time
 }
 
 export interface Database {
-  createSession: (userUniqueIdentifier: string, expiresAt?: number) => Promise<string>;
-  getSession: (sessionIdOrToken: string) => Promise<Session | null>;
-  deleteSession: (sessionIdOrToken: string) => Promise<void>;
+  createSession?: (userUniqueIdentifier: string, expiresAt?: number) => Promise<string>;
+  getSession?: (sessionIdOrToken: string) => Promise<Session | null>;
+  deleteSession?: (sessionIdOrToken: string) => Promise<void>;
   findUserByUniqueField?: (identifier: string) => Promise<User | null>;
   createUser?: (user: User) => Promise<User>;
 }
@@ -23,7 +34,6 @@ export interface OAuthProviderConfig {
   redirectUri: string;
   clientSecret?: string;
   scope?: string;
-  userInfoUrl?: string;
 }
 
 export interface OAuthTokenResponse {
