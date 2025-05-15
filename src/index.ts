@@ -6,13 +6,13 @@ import { Database, OAuthProviderConfig } from './core/types';
 
 export interface AuthConfig {
   strategy: 'stateful' | 'stateless';
-  database: Database;
+  database?: Database;
   jwtSecret?: string;
   oauth?: OAuthProviderConfig;
 }
 
 export class AuthLibrary {
-  private readonly local: LocalAuth;
+  private readonly local?: LocalAuth;
   private readonly oauth?: OAuth;
   private readonly session: StatefulSession | StatelessSession;
 
@@ -21,12 +21,13 @@ export class AuthLibrary {
     if (config.strategy === 'stateless' && !config.jwtSecret) {
       throw new Error('jwtSecret is required for stateless strategy');
     }
-
-    if (!config.database) {
-      throw new Error('database is required');
+    if (config.strategy === 'stateful' && !config.database) {
+      throw new Error('database is required for stateful strategy');
     }
 
-    if (config.strategy === 'stateful') {
+    if (config.database) this.local = new LocalAuth(config.database);
+
+    if (config.strategy === 'stateful' && config.database) {
       this.session = new StatefulSession(config.database);
     } else if (config.strategy === 'stateless' && config.jwtSecret) {
       this.session = new StatelessSession(config.jwtSecret);
@@ -34,17 +35,17 @@ export class AuthLibrary {
       throw new Error('Invalid config');
     }
 
-    this.local = new LocalAuth(config.database);
-
     // Initialize OAuth if provided
     if (config.oauth) this.oauth = new OAuth(config.oauth);
   }
 
-  register(username: string, password: string) {
+  async register(username: string, password: string) {
+    if (!this.local) throw new Error('Local auth is not configured');
     return this.local.register(username, password);
   }
 
-  login(username: string, password: string) {
+  async login(username: string, password: string) {
+    if (!this.local) throw new Error('Local auth is not configured');
     return this.local.login(username, password);
   }
 
@@ -63,17 +64,17 @@ export class AuthLibrary {
     return await this.oauth.refreshAccessToken(refreshToken);
   }
 
-  createSession(userId: string, token?: string) {
+  async createSession(userId: string, expiresAt?: number) {
     if (this.session instanceof StatefulSession) {
-      return this.session.createSession(userId);
+      return this.session.createSession(userId, expiresAt);
     } else if (this.session instanceof StatelessSession) {
-      return this.session.createToken(userId);
+      return this.session.createToken(userId, expiresAt);
     } else {
       throw new Error('Invalid session type');
     }
   }
 
-  verifySession(sessionIdOrToken: string) {
+  async verifySession(sessionIdOrToken: string) {
     if (this.session instanceof StatefulSession) {
       return this.session.verifySession(sessionIdOrToken);
     } else if (this.session instanceof StatelessSession) {
@@ -83,7 +84,7 @@ export class AuthLibrary {
     }
   }
 
-  deleteSession(sessionIdOrToken: string) {
+  async deleteSession(sessionIdOrToken: string) {
     if (this.session instanceof StatefulSession) {
       return this.session.deleteSession(sessionIdOrToken);
     } else {

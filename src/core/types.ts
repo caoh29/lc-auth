@@ -3,12 +3,17 @@ export interface User {
   passwordHash?: string; // Optional for OAuth users
 }
 
+export interface Session {
+  sub: string; // User unique identifier (username or user ID)
+  exp: number; // Expiration time
+}
+
 export interface Database {
-  findUserByUniqueField(identifier: string): Promise<User | null>;
-  createUser(user: User): Promise<void>;
-  saveSession(sessionId: string, data: Session): Promise<void>;
-  getSession(sessionId: string): Promise<Session | null>;
-  deleteSession(sessionId: string): Promise<void>;
+  createSession: (userUniqueIdentifier: string, expiresAt?: number) => Promise<string>;
+  getSession: (sessionIdOrToken: string) => Promise<Session | null>;
+  deleteSession: (sessionIdOrToken: string) => Promise<void>;
+  findUserByUniqueField?: (identifier: string) => Promise<User | null>;
+  createUser?: (user: User) => Promise<User>;
 }
 
 export interface OAuthProviderConfig {
@@ -27,9 +32,4 @@ export interface OAuthTokenResponse {
   expires_in?: number;
   scope?: string;
   refresh_token?: string;
-}
-
-export interface Session {
-  sub: string;
-  exp: number;
 }

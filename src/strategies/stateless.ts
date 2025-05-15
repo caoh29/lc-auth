@@ -3,8 +3,8 @@ import { signJWT, verifyJWT } from '../core/crypto';
 export class StatelessSession {
   constructor(private readonly secret: string) { }
 
-  createToken(userUniqueIdentifier: string): string {
-    return signJWT({ sub: userUniqueIdentifier, exp: Math.floor(Date.now() / 1000) + 1800 }, this.secret);
+  createToken(userUniqueIdentifier: string, expiresAt?: number): string {
+    return signJWT({ sub: userUniqueIdentifier, exp: expiresAt ?? Math.floor(Date.now() / 1000) + 1800 }, this.secret); // 30 minutes
   }
 
   verifyToken(token: string): string | null {
