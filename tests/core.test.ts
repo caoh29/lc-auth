@@ -34,7 +34,7 @@ describe('Core Crypto Utilities', () => {
 
   // JWT Tests
   it('should sign and verify a JWT correctly', () => {
-    const payload = { sub: '123', expires: Date.now() + 3600 };
+    const payload = { sub: '123', exp: Date.now() + 3600, jti: '123' };
     const secret = 'mysecret';
     const token = signJWT(payload, secret);
     const decoded = verifyJWT(token, secret);
@@ -42,7 +42,7 @@ describe('Core Crypto Utilities', () => {
   });
 
   it('should return null for tampered JWT', () => {
-    const payload = { sub: '123', expires: Date.now() + 3600 };
+    const payload = { sub: '123', exp: Date.now() + 3600, jti: '123' };
     const secret = 'mysecret';
     const token = signJWT(payload, secret);
     const tampered = token.split('.').slice(0, 2).join('.') + '.tampered'; // Alter signature
@@ -51,7 +51,7 @@ describe('Core Crypto Utilities', () => {
   });
 
   it('should return null for incorrect secret', () => {
-    const payload = { sub: '123', expires: Date.now() + 3600 };
+    const payload = { sub: '123', exp: Date.now() + 3600, jti: '123' };
     const token = signJWT(payload, 'mysecret');
     const decoded = verifyJWT(token, 'wrongsecret');
     strictEqual(decoded, null, 'JWT with wrong secret should not verify');
@@ -63,7 +63,7 @@ describe('Core Crypto Utilities', () => {
   });
 
   it('should include header and payload in JWT', () => {
-    const payload = { sub: '123', expires: Date.now() + 3600 };
+    const payload = { sub: '123', exp: Date.now() + 3600, jti: '123' };
     const secret = 'mysecret';
     const token = signJWT(payload, secret);
     const [headerB64, payloadB64] = token.split('.');

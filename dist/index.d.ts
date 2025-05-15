@@ -1,21 +1,23 @@
-import { Database, OAuthProviderConfig } from './core/types';
+import { Database, User, Session, OAuthProviderConfig, OAuthTokenResponse } from './core/types';
 export interface AuthConfig {
     strategy: 'stateful' | 'stateless';
-    database: Database;
+    database?: Database;
     jwtSecret?: string;
     oauth?: OAuthProviderConfig;
 }
-export declare class AuthLibrary {
-    private readonly local;
+export declare class Auth {
+    private readonly local?;
     private readonly oauth?;
     private readonly session;
     constructor(config: AuthConfig);
-    register: () => (username: string, password: string) => Promise<import("./core/types").User>;
-    login: () => (username: string, password: string) => Promise<import("./core/types").User | null>;
-    getOAuthUrl: () => ((state: string) => string) | undefined;
-    exchangeOAuthCode: () => ((code: string) => Promise<string>) | undefined;
-    createSession: (userId: string) => string | Promise<string>;
-    verifySession: (sessionIdOrToken: string) => string | Promise<string | null> | null;
-    deleteSession: (sessionIdOrToken: string) => Promise<void>;
+    register(username: string, password: string): Promise<User>;
+    login(username: string, password: string): Promise<User | null>;
+    getOAuthUrl(state: string, codeChallenge?: string): string;
+    exchangeOAuthCode(code: string, codeVerifier?: string): Promise<OAuthTokenResponse>;
+    refreshOAuthToken(refreshToken: string): Promise<OAuthTokenResponse>;
+    createSession(userId: string, expiresAt?: number): Promise<string>;
+    verifySession(sessionIdOrToken: string): Promise<string | null>;
+    getSession(sessionIdOrToken: string): Promise<Session | null>;
+    deleteSession(sessionIdOrToken: string): Promise<void>;
 }
-export default AuthLibrary;
+export default Auth;

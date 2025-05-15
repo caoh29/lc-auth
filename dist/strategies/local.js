@@ -1,21 +1,26 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.LocalAuth = void 0;
-const crypto_1 = require("crypto");
-const crypto_2 = require("../core/crypto");
+const crypto_1 = require("../core/crypto");
 class LocalAuth {
     constructor(db) {
         this.db = db;
     }
     async register(username, password) {
-        const passwordHash = (0, crypto_2.hashPassword)(password);
-        const user = { id: (0, crypto_1.randomBytes)(8).toString('hex'), username, passwordHash };
-        await this.db.createUser(user);
-        return user;
+        if (!this.db.createUser)
+            throw new Error('createUser is not implemented');
+        const passwordHash = (0, crypto_1.hashPassword)(password);
+        const user = { username, passwordHash };
+        const createdUser = await this.db.createUser(user);
+        if (!createdUser)
+            throw new Error('Failed to create user');
+        return createdUser;
     }
     async login(username, password) {
-        const user = await this.db.findUserByUsername(username);
-        if ((user === null || user === void 0 ? void 0 : user.passwordHash) && (0, crypto_2.verifyPassword)(user.passwordHash, password)) {
+        if (!this.db.findUserByUniqueField)
+            throw new Error('findUserByUniqueField is not implemented');
+        const user = await this.db.findUserByUniqueField(username);
+        if ((user === null || user === void 0 ? void 0 : user.passwordHash) && (0, crypto_1.verifyPassword)(user.passwordHash, password)) {
             return user;
         }
         return null;

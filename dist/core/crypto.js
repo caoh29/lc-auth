@@ -4,6 +4,8 @@ exports.hashPassword = hashPassword;
 exports.verifyPassword = verifyPassword;
 exports.signJWT = signJWT;
 exports.verifyJWT = verifyJWT;
+exports.generateCodeVerifier = generateCodeVerifier;
+exports.generateCodeChallenge = generateCodeChallenge;
 const crypto_1 = require("crypto");
 function hashPassword(password) {
     const salt = (0, crypto_1.randomBytes)(16).toString('hex');
@@ -25,6 +27,7 @@ function signJWT(payload, secret) {
 function verifyJWT(token, secret) {
     const [encodedHeader, encodedPayload, signature] = token.split('.');
     const expectedSignature = (0, crypto_1.createHmac)('sha256', secret).update(`${encodedHeader}.${encodedPayload}`).digest('base64url');
+    // Prevent unsigned tokens from being accepted
     if (signature !== expectedSignature)
         return null;
     try {
@@ -33,4 +36,10 @@ function verifyJWT(token, secret) {
     catch (_a) {
         return null;
     }
+}
+function generateCodeVerifier() {
+    return (0, crypto_1.randomBytes)(64).toString('base64url');
+}
+function generateCodeChallenge(codeVerifier) {
+    return (0, crypto_1.createHmac)('sha256', codeVerifier).digest('base64url');
 }
